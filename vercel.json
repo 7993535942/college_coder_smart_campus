@@ -7,7 +7,8 @@
         },
         "ml": {
             "root": "ml",
-            "framework": "fastapi"
+            "framework": "fastapi",
+            "entrypoint": "service.main:app"
         },
         "server": {
             "root": "server",
