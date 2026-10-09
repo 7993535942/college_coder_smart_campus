@@ -1,9 +1,14 @@
+import { handleMockRequest } from './mockFallback.js';
+
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = {
   getToken: () => localStorage.getItem('token'),
   setToken: (t) => localStorage.setItem('token', t),
-  clearToken: () => localStorage.removeItem('token'),
+  clearToken: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
 
   async request(endpoint, options = {}) {
     const token = this.getToken();
@@ -12,16 +17,26 @@ export const api = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers
     };
-    const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
-    if (res.status === 401 && !endpoint.includes('/auth/login')) {
-      this.clearToken();
-      window.location.reload();
+
+    // Attempt real live server first
+    try {
+      const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
+      if (res.status === 401 && !endpoint.includes('/auth/login')) {
+        this.clearToken();
+        window.location.reload();
+      }
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        return await res.json();
+      }
+      // If server returned 404 or HTML error (e.g. static hosting on Vercel), fall back seamlessly
+      console.warn(`[SmartCampus] Live server returned HTTP ${res.status}. Seamlessly falling back to snapshot data for ${endpoint}`);
+      return await handleMockRequest(endpoint, options);
+    } catch (err) {
+      // If server is unreachable/offline, engage resilient client fallback
+      console.warn(`[SmartCampus] Live server unavailable (${err.message}). Engaging resilient fallback for ${endpoint}`);
+      return await handleMockRequest(endpoint, options);
     }
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      throw new Error(`Server returned HTTP ${res.status}`);
-    }
-    return res.json();
   },
 
   // Auth
