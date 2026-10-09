@@ -1,0 +1,21 @@
+{
+  "model_id": "academic_risk",
+  "version": "2.0.0-d1",
+  "algorithm": "HistGradientBoostingClassifier (Calibrated Sigmoid)",
+  "features": [
+    "entry_score_pct",
+    "prev_score_pct",
+    "sem_prev_units",
+    "sem_prev_pass_ratio",
+    "sem_prev_marks_pct",
+    "sem_last_units",
+    "sem_last_pass_ratio",
+    "sem_last_marks_pct",
+    "marks_delta",
+    "pass_ratio_delta"
+  ],
+  "thresholds": {
+    "high_risk": 0.6,
+    "medium_risk": 0.35
+  }
+}

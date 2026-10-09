@@ -1,0 +1,18 @@
+{
+  "model_id": "placement_likelihood",
+  "version": "2.0.0-d3",
+  "algorithm": "RandomForestClassifier (Calibrated Isotonic)",
+  "features": [
+    "cgpa",
+    "latest_gpa",
+    "aptitude_index",
+    "communication_score",
+    "extracurricular_score",
+    "internship_flag",
+    "projects_completed"
+  ],
+  "thresholds": {
+    "likely": 0.6,
+    "uncertain": 0.35
+  }
+}

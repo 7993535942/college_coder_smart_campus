@@ -1,0 +1,278 @@
+version: "2.0.0"
+contract_name: "SmartCampus AI Feature Harmonization Contract"
+description: >
+  Single source of truth harmonizing external public datasets (UCI/Kaggle) 
+  and internal student entity fields to canonical ML model features.
+
+models:
+  model_a:
+    model_id: "academic_risk"
+    display_name: "Academic Risk Model (Model A)"
+    target_name: "academic_risk_flag"
+    target_description: "Binary indicator: 1 = At Academic Risk (Dropout/Failing), 0 = Normal/Graduate"
+    source_dataset: "D1: Predict Students' Dropout and Academic Success (UCI 697)"
+    min_required_feature_coverage: 0.70
+    thresholds:
+      high_risk: 0.60
+      medium_risk: 0.35
+    features:
+      - name: "entry_score_pct"
+        human_label: "Admission Entry Score (%)"
+        source_column: "Admission grade"
+        app_field: "academic.entryScore"
+        transform: "divide_by_2"
+        valid_range: [0.0, 100.0]
+        impute_default: 65.0
+        direction: "higher_reduces_risk"
+
+      - name: "prev_score_pct"
+        human_label: "Previous Qualification Score (%)"
+        source_column: "Previous qualification (grade)"
+        app_field: "academic.previousScore"
+        transform: "divide_by_2"
+        valid_range: [0.0, 100.0]
+        impute_default: 65.0
+        direction: "higher_reduces_risk"
+
+      - name: "sem_prev_units"
+        human_label: "Previous Semester Enrolled Units"
+        source_column: "Curricular units 1st sem (enrolled)"
+        app_field: "academic.semesterHistory.prev.unitsEnrolled"
+        transform: "as_is"
+        valid_range: [0, 30]
+        impute_default: 6
+        direction: "neutral"
+
+      - name: "sem_prev_pass_ratio"
+        human_label: "Previous Semester Course Pass Ratio"
+        source_column: "1st sem approved / enrolled"
+        app_field: "academic.semesterHistory.prev.unitsPassed / unitsEnrolled"
+        transform: "ratio_clip_0_1"
+        valid_range: [0.0, 1.0]
+        impute_default: 0.85
+        direction: "higher_reduces_risk"
+
+      - name: "sem_prev_marks_pct"
+        human_label: "Previous Semester Average Marks (%)"
+        source_column: "Curricular units 1st sem (grade)"
+        app_field: "academic.semesterHistory.prev.avgMarks"
+        transform: "divide_by_20_mult_100"
+        valid_range: [0.0, 100.0]
+        impute_default: 68.0
+        direction: "higher_reduces_risk"
+
+      - name: "sem_last_units"
+        human_label: "Latest Semester Enrolled Units"
+        source_column: "Curricular units 2nd sem (enrolled)"
+        app_field: "academic.semesterHistory.last.unitsEnrolled"
+        transform: "as_is"
+        valid_range: [0, 30]
+        impute_default: 6
+        direction: "neutral"
+
+      - name: "sem_last_pass_ratio"
+        human_label: "Latest Semester Course Pass Ratio"
+        source_column: "2nd sem approved / enrolled"
+        app_field: "academic.semesterHistory.last.unitsPassed / unitsEnrolled"
+        transform: "ratio_clip_0_1"
+        valid_range: [0.0, 1.0]
+        impute_default: 0.82
+        direction: "higher_reduces_risk"
+
+      - name: "sem_last_marks_pct"
+        human_label: "Latest Semester Average Marks (%)"
+        source_column: "Curricular units 2nd sem (grade)"
+        app_field: "academic.semesterHistory.last.avgMarks"
+        transform: "divide_by_20_mult_100"
+        valid_range: [0.0, 100.0]
+        impute_default: 66.0
+        direction: "higher_reduces_risk"
+
+      - name: "marks_delta"
+        human_label: "Semester-over-Semester Marks Delta (%)"
+        source_column: "derived: 2nd sem grade - 1st sem grade"
+        app_field: "academic.semesterHistory.last.avgMarks - prev.avgMarks"
+        transform: "delta"
+        valid_range: [-50.0, 50.0]
+        impute_default: 0.0
+        direction: "higher_reduces_risk"
+
+      - name: "pass_ratio_delta"
+        human_label: "Semester Pass Ratio Delta"
+        source_column: "derived: 2nd sem pass ratio - 1st sem pass ratio"
+        app_field: "sem_last_pass_ratio - sem_prev_pass_ratio"
+        transform: "delta"
+        valid_range: [-1.0, 1.0]
+        impute_default: 0.0
+        direction: "higher_reduces_risk"
+
+    excluded_attributes:
+      - "Marital status"
+      - "Application mode"
+      - "Application order"
+      - "Course"
+      - "Daytime/evening attendance"
+      - "Previous qualification"
+      - "Nacionality"
+      - "Mother's qualification"
+      - "Father's qualification"
+      - "Mother's occupation"
+      - "Father's occupation"
+      - "Displaced"
+      - "Educational special needs"
+      - "Debtor"
+      - "Tuition fees up to date"
+      - "Gender"
+      - "Scholarship holder"
+      - "Age at enrollment"
+      - "International"
+      - "Unemployment rate"
+      - "Inflation rate"
+      - "GDP"
+
+  model_p:
+    model_id: "placement_likelihood"
+    display_name: "Placement Likelihood Model (Model P)"
+    target_name: "placement_flag"
+    target_description: "Binary indicator: 1 = Placed / High Readiness, 0 = Unplaced"
+    source_dataset: "D3: College Student Placement Factors (sahilislam007)"
+    min_required_feature_coverage: 0.70
+    thresholds:
+      likely: 0.60
+      uncertain: 0.35
+    features:
+      - name: "cgpa"
+        human_label: "Cumulative Grade Point Average (CGPA)"
+        source_column: "CGPA"
+        app_field: "academic.cgpa"
+        transform: "as_is"
+        valid_range: [0.0, 10.0]
+        impute_default: 7.2
+        direction: "higher_increases_likelihood"
+
+      - name: "latest_gpa"
+        human_label: "Latest Semester GPA Equivalent"
+        source_column: "Prev_Sem_Result"
+        app_field: "academic.semesterHistory.last.avgMarks / 10"
+        transform: "scale_to_10"
+        valid_range: [0.0, 10.0]
+        impute_default: 7.0
+        direction: "higher_increases_likelihood"
+
+      - name: "aptitude_index"
+        human_label: "Aptitude Assessment Score (0-100)"
+        source_column: "IQ"
+        app_field: "placement.aptitude"
+        transform: "min_max_0_100"
+        valid_range: [0.0, 100.0]
+        impute_default: 65.0
+        direction: "higher_increases_likelihood"
+
+      - name: "communication_score"
+        human_label: "Soft Skills & Communication Score (0-100)"
+        source_column: "Communication_Skills"
+        app_field: "skills.soft"
+        transform: "scale_0_100"
+        valid_range: [0.0, 100.0]
+        impute_default: 68.0
+        direction: "higher_increases_likelihood"
+
+      - name: "extracurricular_score"
+        human_label: "Extracurricular Activity Score (0-100)"
+        source_column: "Extra_Curricular_Score"
+        app_field: "engagement.extracurricularActivity"
+        transform: "scale_0_100"
+        valid_range: [0.0, 100.0]
+        impute_default: 55.0
+        direction: "higher_increases_likelihood"
+
+      - name: "internship_flag"
+        human_label: "Prior Internship Experience (0/1)"
+        source_column: "Internship_Experience"
+        app_field: "placement.internshipExperience"
+        transform: "yes_no_to_binary"
+        valid_range: [0, 1]
+        impute_default: 0
+        direction: "higher_increases_likelihood"
+
+      - name: "projects_completed"
+        human_label: "Technical Projects Completed"
+        source_column: "Projects_Completed"
+        app_field: "skills.projectsCompleted"
+        transform: "cap_99th_percentile"
+        valid_range: [0, 20]
+        impute_default: 2
+        direction: "higher_increases_likelihood"
+
+    excluded_attributes:
+      - "College_ID"
+      - "Academic_Performance"
+
+  model_x:
+    model_id: "exam_score_predictor"
+    display_name: "Exam Score Predictor (Model X)"
+    target_name: "predicted_exam_score"
+    target_description: "Continuous 0-100 predicted exam score for what-if scenarios"
+    source_dataset: "D2: Student Performance Factors (lainguyn123)"
+    min_required_feature_coverage: 0.70
+    features:
+      - name: "attendance_pct"
+        human_label: "Attendance Percentage (%)"
+        source_column: "Attendance"
+        app_field: "attendance.percentage"
+        transform: "as_is"
+        valid_range: [0.0, 100.0]
+        impute_default: 75.0
+        direction: "higher_increases_score"
+
+      - name: "study_hours_week"
+        human_label: "Weekly Self-Study / LMS Hours"
+        source_column: "Hours_Studied"
+        app_field: "lms.learningHours"
+        transform: "as_is"
+        valid_range: [0.0, 60.0]
+        impute_default: 12.0
+        direction: "higher_increases_score"
+
+      - name: "prev_score_pct"
+        human_label: "Previous Exam Score (%)"
+        source_column: "Previous_Scores"
+        app_field: "academic.previousScore"
+        transform: "as_is"
+        valid_range: [0.0, 100.0]
+        impute_default: 68.0
+        direction: "higher_increases_score"
+
+      - name: "tutoring_per_month"
+        human_label: "Monthly Tutoring Sessions Attended"
+        source_column: "Tutoring_Sessions"
+        app_field: "academic.tutoringSessions"
+        transform: "as_is"
+        valid_range: [0, 15]
+        impute_default: 1
+        direction: "higher_increases_score"
+
+      - name: "extracurricular_flag"
+        human_label: "Campus Activity Participation (0/1)"
+        source_column: "Extracurricular_Activities"
+        app_field: "derived: clubs + events + hackathons > 0"
+        transform: "yes_no_to_binary"
+        valid_range: [0, 1]
+        impute_default: 1
+        direction: "higher_increases_score"
+
+    excluded_attributes:
+      - "Parental_Involvement"
+      - "Access_to_Resources"
+      - "Sleep_Hours"
+      - "Motivation_Level"
+      - "Internet_Access"
+      - "Family_Income"
+      - "Teacher_Quality"
+      - "School_Type"
+      - "Peer_Influence"
+      - "Physical_Activity"
+      - "Learning_Disabilities"
+      - "Parental_Education_Level"
+      - "Distance_from_Home"
+      - "Gender"

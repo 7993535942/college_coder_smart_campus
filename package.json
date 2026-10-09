@@ -1,0 +1,27 @@
+{
+  "name": "smartcampus-ai",
+  "version": "2.0.0",
+  "description": "SmartCampus AI - Predict, Optimize & Improve Student Success",
+  "private": true,
+  "scripts": {
+    "start": "node server/src/server.js",
+    "server": "nodemon server/src/server.js",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "ml:train": "python -m ml.src.train --all",
+    "ml:service": "uvicorn ml.service.main:app --host 0.0.0.0 --port 8000 --reload",
+    "ml:cohort": "python -m ml.src.make_demo_cohort",
+    "ml:test": "pytest ml/tests"
+  },
+  "keywords": [
+    "student-success",
+    "machine-learning",
+    "analytics",
+    "education",
+    "fastapi",
+    "react",
+    "express"
+  ],
+  "author": "SmartCampus AI Team",
+  "license": "MIT"
+}
