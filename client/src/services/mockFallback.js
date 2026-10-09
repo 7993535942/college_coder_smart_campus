@@ -1,12 +1,42 @@
-import sampleStudents from './sampleStudents.json';
+import sampleStudents from './sampleStudents.js';
 
 // In-memory / localStorage state management for fallback mode
 const STORAGE_INTERVENTIONS_KEY = 'smartcampus_interventions_fallback';
 const STORAGE_USERS_KEY = 'smartcampus_users_fallback';
 
+// Safe storage wrapper for browsers and headless/SSR environments
+const memoryFallbackMap = {};
+
+const safeStorage = {
+  getItem: (key) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+    } catch {}
+    return memoryFallbackMap[key] || null;
+  },
+  setItem: (key, val) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, val);
+      }
+    } catch {}
+    memoryFallbackMap[key] = val;
+  },
+  removeItem: (key) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch {}
+    delete memoryFallbackMap[key];
+  }
+};
+
 function getStoredInterventions() {
   try {
-    const raw = localStorage.getItem(STORAGE_INTERVENTIONS_KEY);
+    const raw = safeStorage.getItem(STORAGE_INTERVENTIONS_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
   return [
@@ -39,7 +69,7 @@ function getStoredInterventions() {
 
 function saveStoredInterventions(list) {
   try {
-    localStorage.setItem(STORAGE_INTERVENTIONS_KEY, JSON.stringify(list));
+    safeStorage.setItem(STORAGE_INTERVENTIONS_KEY, JSON.stringify(list));
   } catch {}
 }
 
@@ -61,7 +91,7 @@ export async function handleMockRequest(endpoint, options = {}) {
         studentId: null
       };
       const token = 'mock-admin-token-' + Date.now();
-      localStorage.setItem('user', JSON.stringify(user));
+      safeStorage.setItem('user', JSON.stringify(user));
       return { token, user };
     }
 
@@ -80,14 +110,14 @@ export async function handleMockRequest(endpoint, options = {}) {
       studentId: foundStudent.studentId || 'SC-2023-0142'
     };
     const token = 'mock-student-token-' + Date.now();
-    localStorage.setItem('user', JSON.stringify(studentUser));
+    safeStorage.setItem('user', JSON.stringify(studentUser));
     return { token, user: studentUser };
   }
 
   // Auth: Me
   if (endpoint === '/auth/me') {
     try {
-      const stored = localStorage.getItem('user');
+      const stored = safeStorage.getItem('user');
       if (stored) return { user: JSON.parse(stored) };
     } catch {}
     return {
@@ -103,7 +133,7 @@ export async function handleMockRequest(endpoint, options = {}) {
 
   // Auth: Logout
   if (endpoint === '/auth/logout') {
-    localStorage.removeItem('user');
+    safeStorage.removeItem('user');
     return { success: true };
   }
 

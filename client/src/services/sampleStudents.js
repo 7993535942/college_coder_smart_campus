@@ -1,4 +1,4 @@
-[
+export const sampleStudents = [
   {
     "studentId": "SC-2023-0142",
     "name": "Rahul Kumar",
@@ -8930,4 +8930,5 @@
       "agreement": "Aligned"
     }
   }
-]
+];
+export default sampleStudents;
