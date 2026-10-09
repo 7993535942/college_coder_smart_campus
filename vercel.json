@@ -3,7 +3,7 @@
     "services": {
         "client": {
             "root": "client",
-            "framework": "react"
+            "framework": "vite"
         },
         "ml": {
             "root": "ml",
