@@ -36,7 +36,6 @@ const sendHealth = (req, res) => {
 };
 
 app.get('/api', sendStatus);
-app.get('/', sendStatus);
 
 app.get('/api/health', sendHealth);
 app.get('/health', sendHealth);

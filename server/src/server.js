@@ -51,7 +51,7 @@ async function seedDefaultAdmin() {
 connectDB().then(async () => {
   await seedDefaultAdmin();
   getAllStudents().then(s => console.log(`In-memory cache warmed with ${s.length} students`)).catch(() => {});
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`SmartCampus AI Server running on port ${PORT}`);
   });
 }).catch(err => {
