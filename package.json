@@ -4,6 +4,7 @@
   "description": "SmartCampus AI - Predict, Optimize & Improve Student Success",
   "private": true,
   "scripts": {
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install",
     "start": "node server/src/server.js",
     "server": "nodemon server/src/server.js",
     "client": "npm --prefix client run dev",

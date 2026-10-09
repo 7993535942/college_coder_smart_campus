@@ -1,0 +1,23 @@
+services:
+  # ─── Fullstack Web Service (React UI + Express REST API + In-Memory ML) ───
+  - type: web
+    name: smartcampus-ai
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      - key: ML_MODE
+        value: snapshot
+      - key: RISK_FUSION_MODE
+        value: escalate_only

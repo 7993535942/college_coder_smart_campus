@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './db.js';
@@ -23,12 +24,10 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.get(['/', '/api'], (req, res) => {
+app.get('/api', (req, res) => {
   res.json({
     status: 'online',
     service: 'SmartCampus AI Backend REST API',
-    frontendUrl: 'http://localhost:3000',
-    note: 'The interactive visual interface is running at http://localhost:3000',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth/login',
@@ -50,6 +49,25 @@ app.use('/api/simulation', simulationRouter);
 app.use('/api/interventions', interventionsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/ml', mlRouter);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDist = path.resolve(__dirname, '../../client/dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'online',
+      service: 'SmartCampus AI Backend REST API',
+      note: 'Frontend is running on Vite dev server at http://localhost:3000'
+    });
+  });
+}
 
 import { getAllStudents } from './studentStore.js';
 import { User } from './models/User.js';
