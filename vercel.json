@@ -1,40 +1,21 @@
 {
-    "$schema": "https://vercel.sh",
-    "services": {
-        "client": {
-            "root": "client",
-            "framework": "vite"
-        },
-        "ml": {
-            "root": "ml",
-            "framework": "fastapi",
-            "entrypoint": "service.main:app"
-        },
-        "server": {
-            "root": "server",
-            "framework": "express",
-            "bindings": [
-                {
-                    "type": "service",
-                    "service": "ml",
-                    "format": "url",
-                    "env": "ML_SERVICE_URL"
-                }
-            ]
-        }
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "client/dist",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "data/**",
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
     },
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": {
-                "service": "server"
-            }
-        },
-        {
-            "source": "/(.*)",
-            "destination": {
-                "service": "client"
-            }
-        }
-    ]
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

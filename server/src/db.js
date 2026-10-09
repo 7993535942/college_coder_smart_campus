@@ -51,9 +51,22 @@ export async function connectDB() {
   }
 }
 
+export function findSeedPath() {
+  const candidates = [
+    path.resolve(process.cwd(), 'data/demo_seed_scored.json'),
+    path.resolve(__dirname, '../../data/demo_seed_scored.json'),
+    path.resolve(__dirname, '../data/demo_seed_scored.json'),
+    path.resolve(process.cwd(), 'server/data/demo_seed_scored.json')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
 export async function seedFromSnapshot() {
-  const seedPath = path.resolve(__dirname, '../../data/demo_seed_scored.json');
-  if (fs.existsSync(seedPath)) {
+  const seedPath = findSeedPath();
+  if (seedPath) {
     const raw = fs.readFileSync(seedPath, 'utf-8');
     const records = JSON.parse(raw);
     if (!isUsingMemoryStore) {
@@ -71,8 +84,12 @@ export async function seedFromSnapshot() {
 }
 
 export function loadMemoryStore() {
-  const seedPath = path.resolve(__dirname, '../../data/demo_seed_scored.json');
-  if (fs.existsSync(seedPath)) {
-    memoryStore.students = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+  const seedPath = findSeedPath();
+  if (seedPath && memoryStore.students.length === 0) {
+    try {
+      memoryStore.students = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+    } catch (e) {
+      console.warn('Could not parse demo seed JSON:', e.message);
+    }
   }
 }

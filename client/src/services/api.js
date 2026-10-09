@@ -1,4 +1,4 @@
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = {
   getToken: () => localStorage.getItem('token'),
@@ -16,6 +16,10 @@ export const api = {
     if (res.status === 401 && !endpoint.includes('/auth/login')) {
       this.clearToken();
       window.location.reload();
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(`Server returned HTTP ${res.status}`);
     }
     return res.json();
   },
