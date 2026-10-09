@@ -1,0 +1,39 @@
+{
+    "$schema": "https://vercel.sh",
+    "services": {
+        "client": {
+            "root": "client",
+            "framework": "react"
+        },
+        "ml": {
+            "root": "ml",
+            "framework": "fastapi"
+        },
+        "server": {
+            "root": "server",
+            "framework": "express",
+            "bindings": [
+                {
+                    "type": "service",
+                    "service": "ml",
+                    "format": "url",
+                    "env": "ML_SERVICE_URL"
+                }
+            ]
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": {
+                "service": "server"
+            }
+        },
+        {
+            "source": "/(.*)",
+            "destination": {
+                "service": "client"
+            }
+        }
+    ]
+}
