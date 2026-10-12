@@ -1,3 +1,8 @@
+This is my project link :
+https://smartcampus-ehvlwao9.manus.space
+
+
+
 # SmartCampus AI — Student Success & Predictive Analytics Platform (v2)
 
 > **Detect Early. Explain Clearly. Act Smarter.**
